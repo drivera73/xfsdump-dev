@@ -1322,6 +1322,7 @@ noref_elim_recurse(nh_t parh,
 		gen_t gen;
 		bool_t inorphanagepr;
 		bool_t isdirpr;
+		bool_t isselpr;
 		bool_t isrealpr;
 		bool_t isrefpr;
 		bool_t isrenamepr;
@@ -1338,6 +1339,7 @@ noref_elim_recurse(nh_t parh,
 		isdirpr = (cldp->n_flags & NF_ISDIR);
 		isrealpr = (cldp->n_flags & NF_REAL);
 		isrefpr = (cldp->n_flags & NF_REFED);
+		isselpr = (cldp->n_flags & NF_SUBTREE);
 		isrenamepr = (isdirpr && cldp->n_lnkh != NH_NULL);
 		renameh = cldp->n_lnkh;
 		grandcldh = cldp->n_cldh;
@@ -1352,6 +1354,11 @@ noref_elim_recurse(nh_t parh,
 #endif
 
 		Node_unmap(cldh, &cldp);
+
+		if (!isselpr) {
+			cldh = nextcldh;
+			continue;
+		}
 
 		if (isdirpr) {
 			bool_t ok;
