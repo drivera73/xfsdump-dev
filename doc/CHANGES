@@ -1,3 +1,8 @@
+xfsdump-3.3.0 (11 May 2026)
+	- xfsdump: update release.sh (Andrey Albershteyn)
+	- xfsdump: fix permissions on files installed by libtoolize (Andrey Albershteyn)
+	- xfsrestore: only process subtrees that are selected (Donald Douwsma)
+
 xfsdump-3.2.0 (09 Sep 2024)
 	- don't use O_DIRECT on the RT device (Christoph Hellwig)
 	- Fix memory leak (Pavel Reichl)
