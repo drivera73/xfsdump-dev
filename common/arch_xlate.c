@@ -253,7 +253,7 @@ xlate_content_inode_hdr(content_inode_hdr_t *cih1, content_inode_hdr_t *cih2, in
 		ptr2 = cih1;
 	}
 
-	BXLATE(pad1);
+	BXLATE(cih_level_ext);
 	BXLATE(cih_last_id);
 	BXLATE(cih_resume_id);
 	BXLATE(cih_pad2);

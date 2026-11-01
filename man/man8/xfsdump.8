@@ -125,13 +125,19 @@ preceding the source filesystem specification)
 is specified.
 .TP 5
 \f3\-l\f1 \f2level\f1
-Specifies a dump level of 0 to 9.
+Specifies a dump level of 0 to 255.
 The dump level determines the base dump to which this
 dump is relative.
 The base dump is the most recent dump at a lesser level.
 A level 0 dump is absolute \- all files are dumped.
-A dump level where 1 <= \f2level\f1 <= 9 is referred to as an incremental dump.
+A dump level where 1 <= \f2level\f1 <= 255 is referred to as an incremental dump.
 Only files that have been changed since the base dump are dumped.
+Older versions of
+.B xfsdump
+only accept levels 0 to 9.
+Older versions of
+.BR xfsrestore (8)
+can restore dumps made at higher levels, but report them as level 9.
 Subtree dumps
 (see the
 .B \-s

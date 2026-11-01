@@ -71,9 +71,10 @@ struct content_inode_hdr {
 	int32_t cih_dumpattr;				/*   4   8 */
 		/* dump attributes: see #defines below */
 	int32_t cih_level;				/*   4   c */
-		/* dump level */
-	char pad1[4];					/*   4  10 */
-		/* alignment */
+		/* dump level, clamped: use cih_{get,set}_level() */
+	char cih_level_ext[4];				/*   4  10 */
+		/* dump levels above CIH_LEVEL_LEGACY_MAX; was "pad1",
+		 * always zero in dumps from older xfsdump */
 	time32_t cih_last_time;				/*   4  14 */
 		/* if an incremental, time of previous dump at a lesser level */
 	time32_t cih_resume_time;			/*   4  18 */
@@ -131,6 +132,59 @@ typedef struct content_inode_hdr content_inode_hdr_t;
 #define CIH_DUMPATTR_EXTATTR			(1 << 12)
 #define CIH_DUMPATTR_EXTATTRHDR_CHECKSUM	(1 << 13)
 #define CIH_DUMPATTR_NOTSELFCONTAINED		(1 << 14)
+
+/* dump level encoding
+ *
+ * cih_level is an int32_t, but xfsrestore up to and including v3.3.0
+ * asserts that it is a single digit, and otherwise only ever checks it
+ * against zero. So that those versions can still restore dumps made at
+ * higher levels, a level above CIH_LEVEL_LEGACY_MAX is recorded in
+ * cih_level as CIH_LEVEL_LEGACY_MAX, and in full in cih_level_ext as the
+ * two tag bytes below followed by the level as a big-endian 16-bit value.
+ * Dumps at levels 0 to CIH_LEVEL_LEGACY_MAX are written exactly as before,
+ * with cih_level_ext all zero.
+ *
+ * cih_level_ext is copied byte for byte by xlate_content_inode_hdr(), so
+ * byte order is handled here.
+ */
+#define CIH_LEVEL_LEGACY_MAX	9
+#define CIH_LEVEL_EXT_MAX	0xffff
+#define CIH_LEVEL_EXT_TAG0	'L'
+#define CIH_LEVEL_EXT_TAG1	'V'
+
+/* the caller is responsible for level <= CIH_LEVEL_EXT_MAX */
+static inline void
+cih_set_level(content_inode_hdr_t *cih, uint32_t level)
+{
+	if (level <= CIH_LEVEL_LEGACY_MAX) {
+		cih->cih_level = (int32_t)level;
+		cih->cih_level_ext[0] = 0;
+		cih->cih_level_ext[1] = 0;
+		cih->cih_level_ext[2] = 0;
+		cih->cih_level_ext[3] = 0;
+		return;
+	}
+	cih->cih_level = CIH_LEVEL_LEGACY_MAX;
+	cih->cih_level_ext[0] = CIH_LEVEL_EXT_TAG0;
+	cih->cih_level_ext[1] = CIH_LEVEL_EXT_TAG1;
+	cih->cih_level_ext[2] = (char)((level >> 8) & 0xff);
+	cih->cih_level_ext[3] = (char)(level & 0xff);
+}
+
+static inline uint32_t
+cih_get_level(const content_inode_hdr_t *cih)
+{
+	const unsigned char *ext = (const unsigned char *)cih->cih_level_ext;
+	uint32_t level;
+
+	if (cih->cih_level != CIH_LEVEL_LEGACY_MAX ||
+	    ext[0] != CIH_LEVEL_EXT_TAG0 ||
+	    ext[1] != CIH_LEVEL_EXT_TAG1)
+		return (uint32_t)cih->cih_level;
+
+	level = ((uint32_t)ext[2] << 8) | (uint32_t)ext[3];
+	return level > CIH_LEVEL_LEGACY_MAX ? level : CIH_LEVEL_LEGACY_MAX;
+}
 
 
 /* timestruct_t - time structure
