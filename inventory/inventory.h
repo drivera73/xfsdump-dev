@@ -76,7 +76,7 @@ typedef uint32_t		inv_version_t;
  * invt_seshdr_get_level() and invt_seshdr_set_level() to access it.
  */
 typedef uint32_t	inv_level_t;
-#define INV_LEVEL_MAX	255
+#define INV_LEVEL_MAX	65535
 
 /*----------------------------------------------------------------------*/
 /* Inventory                                                            */

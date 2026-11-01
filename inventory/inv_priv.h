@@ -124,20 +124,60 @@ typedef struct invt_seshdr {
 	u_char		sh_level;       /* dump level: use the accessors
 					   invt_seshdr_{get,set}_level() */
 	u_char		sh_pruned;      /* pruned by invutil flag */
-	char		sh_padding[22];
+	char		sh_padding[22]; /* [0-3]: see INVT_LEVEL_EXT */
 } invt_seshdr_t;
+
+/* Dump levels in the session header.
+ *
+ * Levels below INVT_LEVEL_EXT are stored in sh_level as they always were.
+ * A level of INVT_LEVEL_EXT or more is stored as sh_level == INVT_LEVEL_EXT
+ * plus, in sh_padding[0-3], the two tag bytes below and the level as a
+ * big-endian 16-bit value (sh_padding is copied byte for byte by
+ * xlate_invt_seshdr(), so byte order is handled here).
+ *
+ * Versions of the inventory code that predate this only look at sh_level,
+ * so they see all such sessions as level 255: never less than any level
+ * they can dump at, so never chosen by them as the base of an incremental.
+ * They wrote sh_padding uninitialised, which is harmless since they never
+ * wrote sh_level == INVT_LEVEL_EXT. If an older tool copies a session
+ * header without its padding, the session decodes as level INVT_LEVEL_EXT.
+ */
+#define INVT_LEVEL_EXT		0xff
+#define INVT_LEVEL_EXT_TAG0	'L'
+#define INVT_LEVEL_EXT_TAG1	'V'
 
 static inline inv_level_t
 invt_seshdr_get_level(const invt_seshdr_t *hdr)
 {
-	return (inv_level_t)hdr->sh_level;
+	const unsigned char *pad = (const unsigned char *)hdr->sh_padding;
+	inv_level_t level;
+
+	if (hdr->sh_level != INVT_LEVEL_EXT ||
+	    pad[0] != INVT_LEVEL_EXT_TAG0 ||
+	    pad[1] != INVT_LEVEL_EXT_TAG1)
+		return (inv_level_t)hdr->sh_level;
+
+	level = ((inv_level_t)pad[2] << 8) | (inv_level_t)pad[3];
+	return level > INVT_LEVEL_EXT ? level : INVT_LEVEL_EXT;
 }
 
 /* the caller is responsible for level <= INV_LEVEL_MAX */
 static inline void
 invt_seshdr_set_level(invt_seshdr_t *hdr, inv_level_t level)
 {
-	hdr->sh_level = (u_char)level;
+	if (level < INVT_LEVEL_EXT) {
+		hdr->sh_level = (u_char)level;
+		hdr->sh_padding[0] = 0;
+		hdr->sh_padding[1] = 0;
+		hdr->sh_padding[2] = 0;
+		hdr->sh_padding[3] = 0;
+		return;
+	}
+	hdr->sh_level = INVT_LEVEL_EXT;
+	hdr->sh_padding[0] = INVT_LEVEL_EXT_TAG0;
+	hdr->sh_padding[1] = INVT_LEVEL_EXT_TAG1;
+	hdr->sh_padding[2] = (char)((level >> 8) & 0xff);
+	hdr->sh_padding[3] = (char)(level & 0xff);
 }
 
 
