@@ -429,8 +429,8 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
 	    fprintf(stderr, "%s: internal memory error: invidx_text\n", g_programName);
 	    exit(1);
 	}
-	snprintf(txt, len, "        session level: %d label: %s",
-		session->header->sh_level,
+	snprintf(txt, len, "        session level: %u label: %s",
+		invt_seshdr_get_level(session->header),
 		session->session->s_label);
 
 	n = list_add(n, node_create(BOOL_TRUE,	/* hidden */

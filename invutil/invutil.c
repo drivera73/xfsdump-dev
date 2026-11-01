@@ -790,7 +790,7 @@ CheckAndPruneStObjFile(bool_t checkonly,
 	    printf("\t\tsession label:\t\"%s\"\n", StObjses->s_label);
 	    uuid_unparse(StObjses->s_sesid, str);
 	    printf("\t\tsession id:\t%s\n", str);
-	    printf("\t\tlevel:\t\t%d\n", StObjhdr->sh_level);
+	    printf("\t\tlevel:\t\t%u\n", invt_seshdr_get_level(StObjhdr));
 	    printf("\t\tstreams:\t%d\n", StObjses->s_cur_nstreams);
 	    for (i = 0; i < (int) StObjses->s_cur_nstreams; i++) {
 		printf("\t\tstream %d:\n", i);

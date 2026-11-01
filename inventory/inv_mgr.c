@@ -512,14 +512,14 @@ bool_t
 tm_level_lessthan(int fd, invt_seshdr_t *hdr, void *arg,
 		   void **tm)
 {
-	u_char level = *(u_char *)arg;
+	inv_level_t level = *(inv_level_t *)arg;
 	*tm = NULL;
 	if (IS_PARTIAL_SESSION(hdr))
 		return 0;
-	if (hdr->sh_level < level) {
+	if (invt_seshdr_get_level(hdr) < level) {
 #ifdef INVT_DEBUG
-		mlog(MLOG_DEBUG | MLOG_INV, "$ found level %d < %d\n", hdr->sh_level,
-		     level);
+		mlog(MLOG_DEBUG | MLOG_INV, "$ found level %u < %u\n",
+		     invt_seshdr_get_level(hdr), level);
 #endif
 		*tm = calloc(1, sizeof(time32_t));
 		memcpy(*tm, &hdr->sh_time, sizeof(time32_t));
@@ -541,14 +541,14 @@ bool_t
 lastsess_level_lessthan(int fd, invt_seshdr_t *hdr, void *arg,
 			 void **buf)
 {
-	u_char level = *(u_char *)arg;
+	inv_level_t level = *(inv_level_t *)arg;
 	*buf = NULL;
 	if (IS_PARTIAL_SESSION(hdr))
 		return 0;
-	if (hdr->sh_level < level) {
+	if (invt_seshdr_get_level(hdr) < level) {
 #ifdef INVT_DEBUG
-		mlog(MLOG_DEBUG | MLOG_INV, "$ found (ses) level %d < %d \n",
-		     hdr->sh_level, level);
+		mlog(MLOG_DEBUG | MLOG_INV, "$ found (ses) level %u < %u \n",
+		     invt_seshdr_get_level(hdr), level);
 #endif
 		return stobj_make_invsess(fd, (inv_session_t **) buf, hdr);
 	}
@@ -568,14 +568,14 @@ bool_t
 lastsess_level_equalto(int fd, invt_seshdr_t *hdr,
 		       void *arg, void **buf)
 {
-	u_char level = *(u_char *)arg;
+	inv_level_t level = *(inv_level_t *)arg;
 	*buf = NULL;
 	if (IS_PARTIAL_SESSION(hdr))
 		return 0;
-	if (hdr->sh_level == level) {
+	if (invt_seshdr_get_level(hdr) == level) {
 #ifdef INVT_DEBUG
-	mlog(MLOG_DEBUG | MLOG_INV, "$ found (ses) level %d == %d \n", hdr->sh_level,
-	     level);
+	mlog(MLOG_DEBUG | MLOG_INV, "$ found (ses) level %u == %u \n",
+	     invt_seshdr_get_level(hdr), level);
 #endif
 		return stobj_make_invsess(fd, (inv_session_t **) buf, hdr);
 	}

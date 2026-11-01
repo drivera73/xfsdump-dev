@@ -64,7 +64,19 @@ typedef uint32_t		inv_version_t;
 #define PR_STRMSONLY 	3
 #define PR_ALL		4
 #define PR_MAXDEPTH	5
-#define PR_MAXLEVEL	255
+/* Print [-I] suboption level=: value meaning "sessions of any level" */
+#define PR_ANYLEVEL	(-1)
+
+/* Dump levels.
+ *
+ * A level 0 dump is a full dump; a dump at level N > 0 is based on the
+ * most recent dump at a level less than N. INV_LEVEL_MAX is the highest
+ * level the inventory can record. In the on-disk inventory the level of a
+ * session lives in invt_seshdr_t (see inv_priv.h): always go through
+ * invt_seshdr_get_level() and invt_seshdr_set_level() to access it.
+ */
+typedef uint32_t	inv_level_t;
+#define INV_LEVEL_MAX	255
 
 /*----------------------------------------------------------------------*/
 /* Inventory                                                            */
@@ -157,7 +169,7 @@ typedef struct inv_session {
 	time32_t	 s_time;   	/* time of the dump */
 	bool_t		 s_ispartial;	/* was this a partial (dump) ? */
 	bool_t           s_isresumed;   /* was this a resumed (dump) ? */
-	u_char		 s_level;  	/* dump level */
+	inv_level_t	 s_level;  	/* dump level */
 	char		 s_label[INV_STRLEN];  /* session label */
 	char		 s_mountpt[INV_STRLEN];/* path to the mount point */
 	char		 s_devpath[INV_STRLEN];/* path to the device */
@@ -205,7 +217,7 @@ inv_writesession_open(
 	char		*label,
 	bool_t		ispartial,
         bool_t          isresumed,
-	u_char		level,
+	inv_level_t	level,
 	uint		nstreams,
 	time32_t	time,
 	char		*mntpt,
@@ -249,21 +261,21 @@ extern bool_t
 inv_lasttime_level_lessthan(
 	uuid_t			*fsidp,
 	inv_idbtoken_t 		tok,
-	u_char			level,
+	inv_level_t		level,
 	time32_t		**time); /* out */
 
 extern bool_t
 inv_lastsession_level_lessthan(
 	uuid_t			*fsidp,
 	inv_idbtoken_t 		tok,
-	u_char  		level,
+	inv_level_t		level,
 	inv_session_t		**ses); /* out */
 
 extern bool_t
 inv_lastsession_level_equalto(
 	uuid_t			*fsidp,
 	inv_idbtoken_t 		tok,
-	u_char  		level,
+	inv_level_t		level,
 	inv_session_t		**ses); /* out */
 
 /* Given a uuid of a session, return the session structure.*/

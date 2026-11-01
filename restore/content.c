@@ -6814,12 +6814,12 @@ askinvforbaseof(uuid_t baseid, inv_session_t *sessp)
 	if (resumedpr) {
 		ok = inv_lastsession_level_equalto(&sessp->s_fsid,
 						    invtok,
-						    (u_char_t)level,
+						    (inv_level_t)level,
 						    &basesessp);
 	} else {
 		ok = inv_lastsession_level_lessthan(&sessp->s_fsid,
 						     invtok,
-						     (u_char_t)level,
+						     (inv_level_t)level,
 						     &basesessp);
 	}
 	if (!ok) {

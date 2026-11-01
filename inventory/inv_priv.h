@@ -121,10 +121,24 @@ typedef struct invt_seshdr {
 					   stream hdrs */
 	time32_t	sh_time;        /* time of the dump */
 	uint32_t	sh_flag;        /* for misc flags */
-	u_char		sh_level;       /* dump level */
+	u_char		sh_level;       /* dump level: use the accessors
+					   invt_seshdr_{get,set}_level() */
 	u_char		sh_pruned;      /* pruned by invutil flag */
 	char		sh_padding[22];
 } invt_seshdr_t;
+
+static inline inv_level_t
+invt_seshdr_get_level(const invt_seshdr_t *hdr)
+{
+	return (inv_level_t)hdr->sh_level;
+}
+
+/* the caller is responsible for level <= INV_LEVEL_MAX */
+static inline void
+invt_seshdr_set_level(invt_seshdr_t *hdr, inv_level_t level)
+{
+	hdr->sh_level = (u_char)level;
+}
 
 
 /* Each session consists of a number of media streams. While it is given that
@@ -291,7 +305,7 @@ typedef struct invt_pr_ctx {
 	bool_t			invidx;
 	bool_t			invcheck;
 	invt_mobjinfo_t		mobj;
-	u_char			level;
+	int			level;	/* PR_ANYLEVEL or a dump level */
 } invt_pr_ctx_t;
 
 typedef bool_t (*search_callback_t) (int, invt_seshdr_t *, void *, void *);

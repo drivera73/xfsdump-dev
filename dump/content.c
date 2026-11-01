@@ -1046,7 +1046,7 @@ content_init(int argc,
 		}
 		ok = inv_lastsession_level_lessthan(&fsid,
 						    inv_idbt,
-						    (u_char_t)sc_level,
+						    (inv_level_t)sc_level,
 						    &sessp);
 		if (!ok) {
 			sessp = 0;
@@ -1086,7 +1086,7 @@ content_init(int argc,
 		bool_t ok1;
 		ok = inv_lastsession_level_equalto(&fsid,
 						   inv_idbt,
-						   (u_char_t)sc_level,
+						   (inv_level_t)sc_level,
 						   &sessp);
 		ok1 = inv_close(inv_idbt);
 		assert(ok1);
@@ -1999,7 +1999,7 @@ create_inv_session(
 						subtreecnt ? BOOL_TRUE
 							   : BOOL_FALSE,
 						sc_resumepr,
-						(u_char_t)sc_level,
+						(inv_level_t)sc_level,
 						drivecnt,
 						gwhdrtemplatep->gh_timestamp,
 						qmntpnt,

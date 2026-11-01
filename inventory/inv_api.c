@@ -163,7 +163,7 @@ inv_writesession_open(
 	char		*label,
 	bool_t		ispartial,
 	bool_t		isresumed,
-	u_char		level,
+	inv_level_t	level,
 	uint		nstreams,
 	time32_t	time,
 	char		*mntpt,
@@ -179,6 +179,7 @@ inv_writesession_open(
 
 	assert (tok != INV_TOKEN_NULL);
 	assert (sesid && fsid && mntpt && devpath);
+	assert (level <= INV_LEVEL_MAX);
 	forwhat = tok->d_oflag;
 	fd = tok->d_stobj_fd;
 	assert (forwhat != INV_SEARCH_ONLY);
@@ -203,9 +204,10 @@ inv_writesession_open(
 	strcpy(ses.s_devpath, devpath);
 	ses.s_max_nstreams = nstreams;
 
+	memset((void *)&hdr, 0, sizeof(hdr));
         hdr.sh_pruned = 0; /* session is not pruned by invutil */
 	hdr.sh_time = time;
-	hdr.sh_level = level;
+	invt_seshdr_set_level(&hdr, level);
 	hdr.sh_flag = (ispartial) ? INVT_PARTIAL: 0;
 	hdr.sh_flag |= (isresumed) ? INVT_RESUMED : 0;
 	/* sh_streams_off and sh_sess_off will be set in create_session() */
@@ -615,7 +617,7 @@ bool_t
 inv_lasttime_level_lessthan(
 	uuid_t		*fsidp,
 	inv_idbtoken_t	tok,
-	u_char		level,
+	inv_level_t	level,
 	time32_t	**tm)
 {
 	int 	rval;
@@ -648,7 +650,7 @@ bool_t
 inv_lastsession_level_lessthan(
 	uuid_t		*fsidp,
 	inv_idbtoken_t	tok,
-	u_char		level,
+	inv_level_t	level,
 	inv_session_t	**ses)
 {
 	int 	rval;
@@ -683,7 +685,7 @@ bool_t
 inv_lastsession_level_equalto(
 	uuid_t		*fsidp,
 	inv_idbtoken_t	tok,
-	u_char		level,
+	inv_level_t	level,
 	inv_session_t	**ses)
 {
 	int 	rval;
@@ -983,9 +985,24 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
 					prctx->invcheck = BOOL_TRUE;
 					break;
 
-				      case OPT_INVLEVEL:
-					prctx->level = atoi(value);
+				      case OPT_INVLEVEL: {
+					char *endp;
+					unsigned long lvl;
+
+					errno = 0;
+					lvl = value ? strtoul(value, &endp, 10)
+						    : 0;
+					if (!value || !*value || *endp ||
+					    errno || lvl > INV_LEVEL_MAX) {
+						mlog(MLOG_NORMAL | MLOG_INV, _(
+						"INV: level= must be between "
+						"0 and %d\n"), INV_LEVEL_MAX);
+						rval |= I_IERR;
+						break;
+					}
+					prctx->level = (int)lvl;
 					break;
+				      }
 
 				      default:
 					if (strlen(value) == 1 &&
@@ -1096,7 +1113,7 @@ inv_DEBUG_print(int argc, char **argv)
 	inv_oflag_t forwhat = INV_SEARCH_ONLY;
 	prctx.mobj.type = INVT_NULLTYPE;
 	prctx.fstab = prctx.invidx = prctx.invcheck = BOOL_FALSE;
-	prctx.level = PR_MAXLEVEL;
+	prctx.level = PR_ANYLEVEL;
 
 	/* If user didnt indicate -i option, we can't do anything */
 	rval = inv_getopt(argc, argv, &prctx);

@@ -1173,7 +1173,7 @@ stobj_convert_session(inv_session_t *ises, invt_session_t *ses,
 		      invt_seshdr_t *hdr)
 {
 	ises->s_time = hdr->sh_time;
-	ises->s_level = hdr->sh_level;
+	ises->s_level = invt_seshdr_get_level(hdr);
 	ises->s_ispartial = IS_PARTIAL_SESSION(hdr)? BOOL_TRUE: BOOL_FALSE;
 	ises->s_isresumed = IS_RESUMED_SESSION(hdr)? BOOL_TRUE: BOOL_FALSE;
 	ises->s_nstreams = ses->s_cur_nstreams;
@@ -1405,7 +1405,8 @@ DEBUG_sessionprint(inv_session_t *ses, uint ref, invt_pr_ctx_t *prctx)
 	if (prctx->depth == PR_FSONLY)
 		return;
 
-	if ((prctx->level != PR_MAXLEVEL) && (prctx->level != ses->s_level))
+	if ((prctx->level != PR_ANYLEVEL) &&
+	    ((inv_level_t)prctx->level != ses->s_level))
 		return;
 
 	printf("\tsession %d:\n", ref);
@@ -1415,7 +1416,7 @@ DEBUG_sessionprint(inv_session_t *ses, uint ref, invt_pr_ctx_t *prctx)
 	printf("\t\tsession label:\t\"%s\"\n", ses->s_label);
 	uuid_unparse(ses->s_sesid, str);
 	printf("\t\tsession id:\t%s\n", str);
-	printf("\t\tlevel:\t\t%d\n", ses->s_level);
+	printf("\t\tlevel:\t\t%u\n", ses->s_level);
 	printf("\t\tresumed:\t%s\n", ses->s_isresumed ? "YES" : "NO");
 	printf("\t\tsubtree:\t%s\n", ses->s_ispartial ? "YES" : "NO");
 	printf("\t\tstreams:\t%d\n", ses->s_nstreams);
