@@ -64,7 +64,12 @@ typedef uint32_t		inv_version_t;
 #define PR_STRMSONLY 	3
 #define PR_ALL		4
 #define PR_MAXDEPTH	5
-#define PR_MAXLEVEL	255
+#define PR_MAXLEVEL	255	/* -I level= value meaning "any level" */
+
+/* highest dump level a session can be recorded at: sh_level is a byte,
+ * and PR_MAXLEVEL is reserved as the "any level" marker
+ */
+#define INV_LEVEL_MAX	(PR_MAXLEVEL - 1)
 
 /*----------------------------------------------------------------------*/
 /* Inventory                                                            */

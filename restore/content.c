@@ -2083,7 +2083,7 @@ content_stream_restore(ix_t thrdix)
 		matchpr = BOOL_FALSE;
 		resumepr = (scrhdrp->cih_dumpattr & CIH_DUMPATTR_RESUME);
 		assert(scrhdrp->cih_level >= 0);
-		level = (ix_t)scrhdrp->cih_level;
+		level = (ix_t)cih_get_level(scrhdrp);
 		baseidp = resumepr
 			  ?
 			  &scrhdrp->cih_resume_id
@@ -2339,7 +2339,7 @@ content_stream_restore(ix_t thrdix)
 		if (!tranp->t_treeinitdonepr) {
 			bool_t fullpr;
 
-			fullpr = (scrhdrp->cih_level
+			fullpr = (cih_get_level(scrhdrp)
 				   ==
 				   0)
 				 &&
@@ -9432,7 +9432,7 @@ display_dump_label(bool_t lockpr,
 
 	assert(scrhdrp->cih_level >= 0);
 	snprintf(level_string, sizeof(level_string), "%u",
-		 (uint)scrhdrp->cih_level);
+		 (uint)cih_get_level(scrhdrp));
 
 	uuid_unparse(grhdrp->gh_dumpid, dump_string_uuid);
 	uuid_unparse(mrhdrp->mh_mediaid, media_string_uuid);

@@ -75,10 +75,14 @@
  */
 #define ULONGLONG_MAX	18446744073709551615LLU
 
-/* legal range of dump levels
+/* legal range of dump levels: bounded by what the inventory can record
+ * and by what the media file header can carry (see content_inode.h)
  */
 #define LEVEL_DEFAULT	0
-#define LEVEL_MAX	9
+#define LEVEL_MAX	INV_LEVEL_MAX
+#if LEVEL_MAX > CIH_LEVEL_EXT_MAX
+#error "LEVEL_MAX does not fit in the media file header"
+#endif
 
 /* ordinary files as big or bigger than this many pages will be
  * preceeded in the dump by enough padding to align the first byte
@@ -660,7 +664,18 @@ content_init(int argc,
 				usage();
 				return BOOL_FALSE;
 			}
-			sc_level = (ix_t)atoi(optarg);
+			{
+				char *endp;
+				unsigned long lvl;
+
+				errno = 0;
+				lvl = strtoul(optarg, &endp, 10);
+				if (!*optarg || *endp || errno ||
+				    lvl > LEVEL_MAX) {
+					lvl = (unsigned long)LEVEL_MAX + 1;
+				}
+				sc_level = (ix_t)lvl;
+			}
 			if (sc_level > LEVEL_MAX) {
 				mlog(MLOG_NORMAL | MLOG_ERROR, _(
 				      "-%c argument must be "
@@ -1538,7 +1553,7 @@ _("%s is not the root of the filesystem (bind mount?) - use primary mountpoint\n
 	 */
 	assert(sizeof(cwhdrtemplatep->ch_specific) >= sizeof(*scwhdrtemplatep));
 	scwhdrtemplatep->cih_mediafiletype = CIH_MEDIAFILETYPE_DATA;
-	scwhdrtemplatep->cih_level = (int32_t)sc_level;
+	cih_set_level(scwhdrtemplatep, (uint32_t)sc_level);
 	scwhdrtemplatep->cih_dumpattr = CIH_DUMPATTR_INOMAP;
 	if (subtreecnt) {
 		scwhdrtemplatep->cih_dumpattr |= CIH_DUMPATTR_SUBTREE;
