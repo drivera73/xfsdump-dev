@@ -9425,15 +9425,14 @@ display_dump_label(bool_t lockpr,
 		    content_inode_hdr_t *scrhdrp)
 {
 	char dateline[28];
-	char level_string[2];
+	char level_string[12];
 	char dump_string_uuid[UUID_STR_LEN + 1];
 	char media_string_uuid[UUID_STR_LEN + 1];
 	char fs_string_uuid[UUID_STR_LEN + 1];
 
 	assert(scrhdrp->cih_level >= 0);
-	assert(scrhdrp->cih_level < 10);
-	level_string[0] = (char)('0' + (u_char_t)scrhdrp->cih_level);
-	level_string[1] = 0;
+	snprintf(level_string, sizeof(level_string), "%u",
+		 (uint)scrhdrp->cih_level);
 
 	uuid_unparse(grhdrp->gh_dumpid, dump_string_uuid);
 	uuid_unparse(mrhdrp->mh_mediaid, media_string_uuid);
